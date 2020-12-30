@@ -12,14 +12,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MCE2ETest {
     @Test
     void startClient() throws IOException, InterruptedException {
+        String instanceName = "client";
+
         String classpathString = System.getProperty("com.kneelawk.mce2e.minecraft_classpath");
         File projectDir = new File(System.getProperty("com.kneelawk.mce2e.project_root_dir"));
         File buildDir = new File(System.getProperty("com.kneelawk.mce2e.project_build_dir"));
         File mce2eDir = new File(buildDir, "mce2e");
-        File configsDir = new File(mce2eDir, "configs");
+        File instancesDir = new File(mce2eDir, "instances");
+        File instanceDir = new File(instancesDir, instanceName);
+        File configsDir = new File(instanceDir, "configs");
         File log4jCfg = new File(configsDir, "log4j.xml");
         File launchCfg = new File(configsDir, "launch.cfg");
-        File runDir = new File(mce2eDir, "runs/client-run");
+        File runDir = new File(instanceDir, "run");
 
         if (!configsDir.exists()) {
             assertTrue(configsDir.mkdirs(), "Failed to create configs directory");
@@ -56,14 +60,18 @@ public class MCE2ETest {
 
     @Test
     void startServer() throws IOException, InterruptedException {
+        String instanceName = "server";
+
         String classpathString = System.getProperty("com.kneelawk.mce2e.minecraft_classpath");
         File projectDir = new File(System.getProperty("com.kneelawk.mce2e.project_root_dir"));
         File buildDir = new File(System.getProperty("com.kneelawk.mce2e.project_build_dir"));
         File mce2eDir = new File(buildDir, "mce2e");
-        File configsDir = new File(mce2eDir, "configs");
+        File instancesDir = new File(mce2eDir, "instances");
+        File instanceDir = new File(instancesDir, instanceName);
+        File configsDir = new File(instanceDir, "configs");
         File log4jCfg = new File(configsDir, "log4j.xml");
         File launchCfg = new File(configsDir, "launch.cfg");
-        File runDir = new File(mce2eDir, "runs/server-run");
+        File runDir = new File(instanceDir, "run");
 
         if (!configsDir.exists()) {
             assertTrue(configsDir.mkdirs(), "Failed to create configs directory");
