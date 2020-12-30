@@ -16,6 +16,12 @@
   "environment": "*",
   "entrypoints": {
     "main": [
+    ],
+    "client": [
+      "com.kneelawk.mce2etest.client.MCE2ETestClientMod"
+    ],
+    "server": [
+      "com.kneelawk.mce2etest.server.MCE2ETestServerMod"
     ]
   },
   "mixins": [
