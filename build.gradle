@@ -11,11 +11,11 @@ version = project.mod_version
 group = project.maven_group
 
 sourceSets {
-    mce2eApi {
+    marionetteApi {
         java {
         }
     }
-    mce2e {
+    marionettist {
         java {
         }
     }
@@ -33,12 +33,12 @@ dependencies {
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
 
-    implementation sourceSets.mce2eApi.output
+    implementation sourceSets.marionetteApi.output
 
-    mce2eImplementation 'commons-io:commons-io:2.8.0'
-    mce2eImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    mce2eImplementation sourceSets.mce2eApi.output
-    mce2eRuntime 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    marionettistImplementation 'commons-io:commons-io:2.8.0'
+    marionettistImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    marionettistImplementation sourceSets.marionetteApi.output
+    marionettistRuntime 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
 processResources {
@@ -94,19 +94,19 @@ static String serializeCollection(FileCollection files) {
 }
 
 afterEvaluate {
-    task mce2eTest(type: Test, dependsOn: [classes, mce2eClasses]) {
+    task marionetteTest(type: Test, dependsOn: [classes, marionettistClasses]) {
         description "Runs Minecraft end-to-end tests"
         group 'verification'
-        testClassesDirs = sourceSets.mce2e.output.classesDirs
-        classpath = sourceSets.mce2e.runtimeClasspath
+        testClassesDirs = sourceSets.marionettist.output.classesDirs
+        classpath = sourceSets.marionettist.runtimeClasspath
         outputs.upToDateWhen { false }
         mustRunAfter test
         useJUnitPlatform()
         testLogging.showStandardStreams true
-        systemProperty('com.kneelawk.mce2e.minecraft_classpath', serializeCollection(sourceSets.main.runtimeClasspath))
-        systemProperty('com.kneelawk.mce2e.project_root_dir', project.rootDir)
-        systemProperty('com.kneelawk.mce2e.project_build_dir', project.buildDir)
+        systemProperty('com.kneelawk.marionette.minecraft_classpath', serializeCollection(sourceSets.main.runtimeClasspath))
+        systemProperty('com.kneelawk.marionette.project_root_dir', project.rootDir)
+        systemProperty('com.kneelawk.marionette.project_build_dir', project.buildDir)
     }
 
-    check.dependsOn mce2eTest
+    check.dependsOn marionetteTest
 }

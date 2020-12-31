@@ -1,4 +1,4 @@
-# MCE2E
-Minecraft End-To-End Testing.
+# Marionette
+Minecraft Integration Testing
 
-This is a proof-of-concept for minecraft end-to-end testing.
+This is a proof-of-concept for minecraft integration testing.
