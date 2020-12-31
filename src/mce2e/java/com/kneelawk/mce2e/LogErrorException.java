@@ -1,6 +1,7 @@
 package com.kneelawk.mce2e;
 
-class LogErrorException extends RuntimeException {
+// TODO: Make this not a RuntimeException.
+public class LogErrorException extends RuntimeException {
     public LogErrorException(String message) {
         super(message);
     }

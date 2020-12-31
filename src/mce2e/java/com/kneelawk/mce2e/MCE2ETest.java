@@ -1,57 +1,25 @@
 package com.kneelawk.mce2e;
 
-import org.apache.commons.io.FileUtils;
+import com.kneelawk.mce2e.instance.MinecraftClientInstance;
+import com.kneelawk.mce2e.instance.MinecraftClientInstanceBuilder;
+import com.kneelawk.mce2e.instance.MinecraftServerInstance;
+import com.kneelawk.mce2e.instance.MinecraftServerInstanceBuilder;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.util.Scanner;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class MCE2ETest {
     @Test
     void startClient() throws IOException, InterruptedException {
-        String instanceName = "client";
-
-        String classpathString = System.getProperty("com.kneelawk.mce2e.minecraft_classpath");
-        File projectDir = new File(System.getProperty("com.kneelawk.mce2e.project_root_dir"));
-        File buildDir = new File(System.getProperty("com.kneelawk.mce2e.project_build_dir"));
-        File mce2eDir = new File(buildDir, "mce2e");
-        File instancesDir = new File(mce2eDir, "instances");
-        File instanceDir = new File(instancesDir, instanceName);
-        File configsDir = new File(instanceDir, "configs");
-        File log4jCfg = new File(configsDir, "log4j.xml");
-        File launchCfg = new File(configsDir, "launch.cfg");
-        File runDir = new File(instanceDir, "run");
-
-        if (!configsDir.exists()) {
-            assertTrue(configsDir.mkdirs(), "Failed to create configs directory");
-        }
-        writeLog4jConfig(log4jCfg);
-        writeLaunchConfig(launchCfg, log4jCfg, projectDir);
-
-        if (runDir.exists()) {
-            FileUtils.deleteDirectory(runDir);
-        }
-        assertTrue(runDir.mkdirs(), "Failed to create the run directory");
+        MinecraftClientInstanceBuilder minecraftBuilder = new MinecraftClientInstanceBuilder("client");
 
         System.out.println("#############################");
         System.out.println("# Starting Minecraft Client #");
         System.out.println("#############################");
-        ProcessBuilder minecraftBuilder =
-                new ProcessBuilder("java", "-cp", classpathString, "-Dfabric.dli.config=" + launchCfg,
-                        "-Dfabric.dli.env=client", "-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotClient",
-                        "com.kneelawk.mce2etest.client.MCE2ETestClient");
-        minecraftBuilder.directory(runDir);
+        MinecraftClientInstance minecraft = minecraftBuilder.start();
 
-        Process minecraft = minecraftBuilder.start();
-        LogWatcherThread watcher = new LogWatcherThread(minecraft.getInputStream(), System.out);
-        watcher.start();
-        new IOCopyThread(minecraft.getErrorStream(), System.err).start();
-
-        assertEquals(0, minecraft.waitFor(), "Minecraft failed to shutdown correctly! See console for details.");
-        watcher.checkError();
+        minecraft.finish();
 
         System.out.println("#############################");
         System.out.println("# Minecraft Client finished #");
@@ -60,82 +28,48 @@ public class MCE2ETest {
 
     @Test
     void startServer() throws IOException, InterruptedException {
-        String instanceName = "server";
-
-        String classpathString = System.getProperty("com.kneelawk.mce2e.minecraft_classpath");
-        File projectDir = new File(System.getProperty("com.kneelawk.mce2e.project_root_dir"));
-        File buildDir = new File(System.getProperty("com.kneelawk.mce2e.project_build_dir"));
-        File mce2eDir = new File(buildDir, "mce2e");
-        File instancesDir = new File(mce2eDir, "instances");
-        File instanceDir = new File(instancesDir, instanceName);
-        File configsDir = new File(instanceDir, "configs");
-        File log4jCfg = new File(configsDir, "log4j.xml");
-        File launchCfg = new File(configsDir, "launch.cfg");
-        File runDir = new File(instanceDir, "run");
-
-        if (!configsDir.exists()) {
-            assertTrue(configsDir.mkdirs(), "Failed to create configs directory");
-        }
-        writeLog4jConfig(log4jCfg);
-        writeLaunchConfig(launchCfg, log4jCfg, projectDir);
-
-        if (runDir.exists()) {
-            FileUtils.deleteDirectory(runDir);
-        }
-        assertTrue(runDir.mkdirs(), "Failed to create the run directory");
-
-        PrintStream eula = new PrintStream(new File(runDir, "eula.txt"));
-        eula.println("eula=true");
-        eula.close();
+        MinecraftServerInstanceBuilder minecraftBuilder = new MinecraftServerInstanceBuilder("server");
 
         System.out.println("#############################");
         System.out.println("# Starting Minecraft Server #");
         System.out.println("#############################");
-        ProcessBuilder minecraftBuilder =
-                new ProcessBuilder("java", "-cp", classpathString, "-Dfabric.dli.config=" + launchCfg,
-                        "-Dfabric.dli.env=server", "-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer",
-                        "com.kneelawk.mce2etest.server.MCE2ETestServer", "--nogui");
-        minecraftBuilder.directory(runDir);
-
-        Process minecraft = minecraftBuilder.start();
-        LogWatcherThread watcher = new LogWatcherThread(minecraft.getInputStream(), System.out);
-        watcher.start();
-        new IOCopyThread(minecraft.getErrorStream(), System.err).start();
+        MinecraftServerInstance minecraft = minecraftBuilder.start();
 
         // make sure the server stops
-        PrintStream serverInput = new PrintStream(minecraft.getOutputStream());
+        PrintStream serverInput = new PrintStream(minecraft.getProcess().getOutputStream());
         serverInput.println("/stop");
         serverInput.flush();
 
-        assertEquals(0, minecraft.waitFor(), "Minecraft failed to shutdown correctly! See console for details.");
-        watcher.checkError();
+        minecraft.finish();
 
         System.out.println("#############################");
         System.out.println("# Minecraft Server finished #");
         System.out.println("#############################");
     }
 
-    private static void writeLog4jConfig(File log4jCfg) throws IOException {
-        FileUtils.copyToFile(MCE2ETest.class.getResourceAsStream("log4j.xml"), log4jCfg);
+    @Test
+    void startBoth() throws IOException, InterruptedException {
+        MinecraftServerInstanceBuilder serverBuilder = new MinecraftServerInstanceBuilder("server1");
+        MinecraftClientInstanceBuilder clientBuilder = new MinecraftClientInstanceBuilder("client1");
+
+        System.out.println("#######################################");
+        System.out.println("# Starting Minecrft Server and Client #");
+        System.out.println("#######################################");
+
+        MinecraftServerInstance server = serverBuilder.start();
+        MinecraftClientInstance client = clientBuilder.start();
+
+        PrintStream serverInput = new PrintStream(server.getProcess().getOutputStream());
+        serverInput.println("/op client1");
+        serverInput.flush();
+
+        // Here, the player is expected to connect to the server at local host and execute the command `/stop` to stop the server, then close the client.
+
+        server.finish();
+        client.finish();
+
+        System.out.println("#######################################");
+        System.out.println("# Minecrft Server and Client finished #");
+        System.out.println("#######################################");
     }
-
-    private static void writeLaunchConfig(File launchCfg, File log4jCfg, File projectDir) throws IOException {
-        File originalLaunchCfg = new File(projectDir, ".gradle/loom-cache/launch.cfg");
-        String log4jCfgKey = "log4j.configurationFile=";
-        Scanner originalCfg = new Scanner(originalLaunchCfg);
-        PrintStream cfg = new PrintStream(launchCfg);
-
-        while (originalCfg.hasNextLine()) {
-            String line = originalCfg.nextLine();
-            int index = line.indexOf(log4jCfgKey);
-            if (index != -1) {
-                cfg.println(line.substring(0, index + log4jCfgKey.length()) + log4jCfg);
-            } else {
-                cfg.println(line);
-            }
-        }
-
-        cfg.close();
-    }
-
 }

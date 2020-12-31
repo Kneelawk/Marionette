@@ -7,14 +7,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-class LogWatcherThread extends Thread {
+public class LogWatcherThread extends Thread {
     private final InputStream is;
     private final OutputStream os;
+    private final String prefix;
     private final List<String> errorMessages = new ArrayList<>();
 
     public LogWatcherThread(InputStream is, OutputStream os) {
+        this(is, os, null);
+    }
+
+    public LogWatcherThread(InputStream is, OutputStream os, String prefix) {
         this.is = is;
         this.os = os;
+        this.prefix = prefix;
     }
 
     @Override
@@ -27,7 +33,13 @@ class LogWatcherThread extends Thread {
             if (line.startsWith("[FATAL]")) {
                 errorMessages.add(line);
             }
-            out.println(line);
+
+            if (prefix != null) {
+                out.println(prefix + line);
+            } else {
+                out.println(line);
+            }
+
             out.flush();
         }
 
