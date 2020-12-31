@@ -2,6 +2,8 @@ package com.kneelawk.mce2e.instance;
 
 import com.kneelawk.mce2e.LogWatcherThread;
 
+import java.rmi.RemoteException;
+
 public abstract class AbstractMinecraftInstance {
     protected final Process process;
     protected final LogWatcherThread outWatcher;
@@ -17,6 +19,8 @@ public abstract class AbstractMinecraftInstance {
     public Process getProcess() {
         return process;
     }
+
+    public abstract void startMinecraft() throws RemoteException;
 
     public void finish() throws InterruptedException {
         if (process.waitFor() != 0) {

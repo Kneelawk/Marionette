@@ -1,6 +1,9 @@
 package com.kneelawk.mce2e.instance;
 
 import com.kneelawk.mce2e.LogWatcherThread;
+import com.kneelawk.mce2e.MCE2EConstants;
+import com.kneelawk.mce2e.RMIConnectionManager;
+import com.kneelawk.mce2e.RMIMinecraftServerAccess;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -70,7 +73,7 @@ public class MinecraftServerInstanceBuilder extends AbstractMinecraftInstanceBui
         serverProperties.setProperty("server-port", String.valueOf(serverPort));
     }
 
-    public MinecraftServerInstance start() throws IOException {
+    public MinecraftServerInstance start(RMIConnectionManager manager) throws IOException {
         setup();
 
         if (eulaEnabled) {
@@ -89,6 +92,8 @@ public class MinecraftServerInstanceBuilder extends AbstractMinecraftInstanceBui
         commands.add("-Dfabric.dli.config=" + launchCfg);
         commands.add("-Dfabric.dli.env=server");
         commands.add("-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer");
+        commands.add("-D" + MCE2EConstants.INSTANCE_NAME_PROPERTY + "=" + instanceName);
+        commands.add("-D" + MCE2EConstants.RMI_PORT_PROPERTY + "=" + manager.getPort());
         commands.add("com.kneelawk.mce2etest.server.MCE2ETestServer");
 
         if (!guiEnabled) {
@@ -99,6 +104,8 @@ public class MinecraftServerInstanceBuilder extends AbstractMinecraftInstanceBui
         minecraftBuilder.directory(runDir);
 
         Process minecraft = minecraftBuilder.start();
+        parentProcess(minecraft);
+
         LogWatcherThread outWatcher =
                 new LogWatcherThread(minecraft.getInputStream(), System.out, "[" + instanceName + "] ");
         outWatcher.start();
@@ -106,8 +113,8 @@ public class MinecraftServerInstanceBuilder extends AbstractMinecraftInstanceBui
                 new LogWatcherThread(minecraft.getErrorStream(), System.err, "[" + instanceName + "] ");
         errWatcher.start();
 
-        // TODO: Handle RMI connection stuff here
+        RMIMinecraftServerAccess rmiAccess = manager.waitForBinding(instanceName);
 
-        return new MinecraftServerInstance(minecraft, outWatcher, errWatcher);
+        return new MinecraftServerInstance(minecraft, outWatcher, errWatcher, rmiAccess);
     }
 }

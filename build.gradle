@@ -37,6 +37,7 @@ dependencies {
 
     mce2eImplementation 'commons-io:commons-io:2.8.0'
     mce2eImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    mce2eImplementation sourceSets.mce2eApi.output
     mce2eRuntime 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
@@ -101,6 +102,7 @@ afterEvaluate {
         outputs.upToDateWhen { false }
         mustRunAfter test
         useJUnitPlatform()
+        testLogging.showStandardStreams true
         systemProperty('com.kneelawk.mce2e.minecraft_classpath', serializeCollection(sourceSets.main.runtimeClasspath))
         systemProperty('com.kneelawk.mce2e.project_root_dir', project.rootDir)
         systemProperty('com.kneelawk.mce2e.project_build_dir', project.buildDir)

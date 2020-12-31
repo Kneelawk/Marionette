@@ -1,5 +1,6 @@
 package com.kneelawk.mce2e.instance;
 
+import com.kneelawk.mce2e.RMIConnectionManager;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -75,7 +76,16 @@ public abstract class AbstractMinecraftInstanceBuilder {
         }
     }
 
-    public abstract AbstractMinecraftInstance start() throws IOException;
+    /**
+     * This does not actually make the process a child of this process, but it does install shutdown hooks to kill the child process if this process is killed.
+     *
+     * @param process the process to kill when this process is killed.
+     */
+    protected static void parentProcess(Process process) {
+        Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+    }
+
+    public abstract AbstractMinecraftInstance start(RMIConnectionManager manager) throws IOException;
 
     private static void writeLog4jConfig(File log4jCfg) throws IOException {
         FileUtils.copyToFile(AbstractMinecraftInstanceBuilder.class.getResourceAsStream("log4j.xml"), log4jCfg);

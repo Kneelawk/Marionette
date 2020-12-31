@@ -12,7 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CurrentThreadExecutorService implements ExecutorService, Runnable, CurrentThread {
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
-    private final BlockingQueue<FutureTask<?>> futureTasks = new SynchronousQueue<>();
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private final BlockingQueue<FutureTask<?>> futureTasks = new LinkedBlockingQueue<>();
     private final CountDownLatch awaiter = new CountDownLatch(1);
     private boolean running = false;
 
@@ -32,19 +33,23 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
 
     @Override
     public void shutdown() {
-        futureTasks.add(new FutureTask<>(() -> {
-            running = false;
-            shutdown.set(true);
-        }, null));
+        if (!shuttingDown.getAndSet(true)) {
+            futureTasks.add(new FutureTask<>(() -> {
+                running = false;
+                shutdown.set(true);
+            }, null));
+        }
     }
 
     @NotNull
     @Override
     public List<Runnable> shutdownNow() {
-        futureTasks.add(new FutureTask<>(() -> {
-            running = false;
-            shutdown.set(true);
-        }, null));
+        if (!shuttingDown.getAndSet(true)) {
+            futureTasks.add(new FutureTask<>(() -> {
+                running = false;
+                shutdown.set(true);
+            }, null));
+        }
         return new ArrayList<>();
     }
 
@@ -70,12 +75,20 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
 
     @Override
     public void execute(@NotNull Runnable command) {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         futureTasks.add(new FutureTask<>(command, null));
     }
 
     @NotNull
     @Override
     public <T> Future<T> submit(@NotNull Callable<T> task) {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         FutureTask<T> f = new FutureTask<>(task);
         futureTasks.add(f);
         return f;
@@ -84,6 +97,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @NotNull
     @Override
     public <T> Future<T> submit(@NotNull Runnable task, T result) {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         FutureTask<T> f = new FutureTask<>(task, result);
         futureTasks.add(f);
         return f;
@@ -92,6 +109,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @NotNull
     @Override
     public Future<?> submit(@NotNull Runnable task) {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         FutureTask<?> f = new FutureTask<>(task, null);
         futureTasks.add(f);
         return f;
@@ -100,6 +121,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @NotNull
     @Override
     public <T> List<Future<T>> invokeAll(@NotNull Collection<? extends Callable<T>> tasks) throws InterruptedException {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         List<Future<T>> futures = new ArrayList<>();
 
         try {
@@ -129,6 +154,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @Override
     public <T> List<Future<T>> invokeAll(@NotNull Collection<? extends Callable<T>> tasks, long timeout,
                                          @NotNull TimeUnit unit) throws InterruptedException {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         final long nanos = unit.toNanos(timeout);
         final long deadline = System.nanoTime() + nanos;
 
@@ -181,6 +210,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @Override
     public <T> T invokeAny(@NotNull Collection<? extends Callable<T>> tasks)
             throws InterruptedException, ExecutionException {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         try {
             return doInvokeAny(tasks, false, 0);
         } catch (TimeoutException cannotHappen) {
@@ -192,6 +225,10 @@ public class CurrentThreadExecutorService implements ExecutorService, Runnable, 
     @Override
     public <T> T invokeAny(@NotNull Collection<? extends Callable<T>> tasks, long timeout, @NotNull TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("This executor is being shut down");
+        }
+
         return doInvokeAny(tasks, true, unit.toNanos(timeout));
     }
 

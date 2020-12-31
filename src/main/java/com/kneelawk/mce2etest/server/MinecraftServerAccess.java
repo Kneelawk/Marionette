@@ -1,25 +1,18 @@
 package com.kneelawk.mce2etest.server;
 
 import com.kneelawk.mce2e.RMIMinecraftServerAccess;
+import com.kneelawk.mce2etest.AbstractMinecraftAccess;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
+import java.util.concurrent.ExecutorService;
 
-public class MinecraftServerAccess implements RMIMinecraftServerAccess {
-    private static final String NEXT_MAIN = "net.fabricmc.devlaunchinjector.Main";
-
-    private final String[] args;
-
-    public MinecraftServerAccess(String[] args) {
-        this.args = args;
+public class MinecraftServerAccess extends AbstractMinecraftAccess implements RMIMinecraftServerAccess {
+    protected MinecraftServerAccess(ExecutorService mainThread, String[] args) {
+        super(mainThread, args);
     }
 
     @Override
-    public void start() throws Throwable {
-        MethodHandle handle = MethodHandles
-                .publicLookup()
-                .findStatic(Class.forName(NEXT_MAIN), "main", MethodType.methodType(Void.TYPE, String[].class));
-        handle.invokeExact(args);
+    public void hello() {
+        // Simulates doing something on the server.
+        System.out.println("Hello World!");
     }
 }

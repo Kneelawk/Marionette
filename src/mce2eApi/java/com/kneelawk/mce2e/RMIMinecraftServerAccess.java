@@ -1,5 +1,10 @@
 package com.kneelawk.mce2e;
 
-public interface RMIMinecraftServerAccess {
-    void start() throws Throwable;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface RMIMinecraftServerAccess extends Remote {
+    void start() throws RemoteException;
+
+    void hello() throws RemoteException;
 }
