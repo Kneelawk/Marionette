@@ -1,18 +1,19 @@
 package com.kneelawk.marionette.server;
 
+import com.google.common.util.concurrent.SettableFuture;
 import com.kneelawk.marionette.ExecutionUtils;
+import com.kneelawk.marionette.MarionetteExecutors;
 import com.kneelawk.marionette.api.RMIRunnable;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 public class ServerGlobalSignals {
-    private static final AtomicReference<RMIRunnable> SERVER_STARTED_CALLBACK = new AtomicReference<>();
+    private static final SettableFuture<Void> SERVER_STARTED_FUTURE = SettableFuture.create();
 
     public static void signalServerStarted() {
-        ExecutionUtils.signalRMIRunnable(SERVER_STARTED_CALLBACK);
+        SERVER_STARTED_FUTURE.set(null);
     }
 
     public static void setServerStartedCallback(RMIRunnable callback) {
-        SERVER_STARTED_CALLBACK.set(callback);
+        SERVER_STARTED_FUTURE
+                .addListener(ExecutionUtils.toRunnable(callback), MarionetteExecutors.getCallbackExecutor());
     }
 }

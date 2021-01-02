@@ -87,4 +87,15 @@ public class ExecutionUtils {
             }
         }
     }
+
+    public static Runnable toRunnable(RMIRunnable runnable) {
+        return () -> {
+            try {
+                runnable.run();
+            } catch (RemoteException e) {
+                // TODO: Handle this RemoteException properly.
+                e.printStackTrace();
+            }
+        };
+    }
 }
