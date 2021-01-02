@@ -18,14 +18,18 @@
     "main": [
     ],
     "client": [
-      "com.kneelawk.marionette.client.MarionetteTestClientMod"
+      "com.kneelawk.marionette.client.MarionetteClientMod"
     ],
     "server": [
-      "com.kneelawk.marionette.server.MarionetteTestServerMod"
+      "com.kneelawk.marionette.server.MarionetteServerMod"
+    ],
+    "preLaunch": [
+      "com.kneelawk.marionette.MarionetteModPreLaunch"
     ]
   },
   "mixins": [
-    "marionette.mixins.json"
+    "marionette.mixins.json",
+    "marionette.client.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.9.2",

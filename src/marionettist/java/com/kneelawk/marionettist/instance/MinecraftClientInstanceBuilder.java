@@ -1,9 +1,9 @@
 package com.kneelawk.marionettist.instance;
 
 import com.kneelawk.marionette.api.MarionetteConstants;
-import com.kneelawk.marionettist.RMIConnectionManager;
-import com.kneelawk.marionettist.LogWatcherThread;
 import com.kneelawk.marionette.api.RMIMinecraftClientAccess;
+import com.kneelawk.marionettist.LogWatcherThread;
+import com.kneelawk.marionettist.RMIConnectionManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,9 +36,10 @@ public class MinecraftClientInstanceBuilder extends AbstractMinecraftInstanceBui
         commands.add("-Dfabric.dli.config=" + launchCfg);
         commands.add("-Dfabric.dli.env=client");
         commands.add("-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotClient");
+        commands.add("-D" + MarionetteConstants.ENVIRONMENT_PROPERTY + "=client");
         commands.add("-D" + MarionetteConstants.INSTANCE_NAME_PROPERTY + "=" + instanceName);
         commands.add("-D" + MarionetteConstants.RMI_PORT_PROPERTY + "=" + manager.getPort());
-        commands.add("com.kneelawk.marionette.client.MarionetteTestClient");
+        commands.add("net.fabricmc.devlaunchinjector.Main");
 
         if (username != null) {
             commands.add("--username");

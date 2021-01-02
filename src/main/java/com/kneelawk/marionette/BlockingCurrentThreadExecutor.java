@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CurrentThreadExecutorService implements ExecutorService, Runnable, CurrentThread {
+public class BlockingCurrentThreadExecutor implements ExecutorService, Runnable, CurrentThread {
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final BlockingQueue<FutureTask<?>> futureTasks = new LinkedBlockingQueue<>();

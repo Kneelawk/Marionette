@@ -35,6 +35,7 @@ dependencies {
 
     implementation sourceSets.marionetteApi.output
 
+    marionettistImplementation 'com.google.guava:guava:30.1-jre'
     marionettistImplementation 'commons-io:commons-io:2.8.0'
     marionettistImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     marionettistImplementation sourceSets.marionetteApi.output

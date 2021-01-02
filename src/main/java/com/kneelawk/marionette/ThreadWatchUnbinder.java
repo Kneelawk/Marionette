@@ -9,17 +9,11 @@ import java.util.Set;
 public class ThreadWatchUnbinder extends Thread {
     private final Remote toUnbind;
 
-    private final Set<Thread> initialThreads;
-    private final int finalThreadCount;
-
-    public ThreadWatchUnbinder(Remote toUnbind, int finalThreadCount) {
+    public ThreadWatchUnbinder(Remote toUnbind) {
         this.toUnbind = toUnbind;
-        this.finalThreadCount = finalThreadCount;
 
         setDaemon(true);
         setName("RMI-Unbinder");
-
-        initialThreads = new HashSet<>(Thread.getAllStackTraces().keySet());
     }
 
     @Override
@@ -28,15 +22,14 @@ public class ThreadWatchUnbinder extends Thread {
             Set<Thread> remainingThreads = new HashSet<>(Thread.getAllStackTraces().keySet());
 
             // remove all daemon threads
-            remainingThreads.removeIf(thread -> thread.isDaemon());
+            remainingThreads.removeIf(Thread::isDaemon);
 
-            // remove the jvm shutdown keepalive thread
+            // remove the jvm shutdown and rmi keepalive thread
             remainingThreads.removeIf(thread -> "DestroyJavaVM".equals(thread.getName()));
+            remainingThreads
+                    .removeIf(thread -> thread.getName() != null && thread.getName().toLowerCase().contains("rmi"));
 
-            // remove all the threads we knew about when we were created (hopefully including the rmi threads)
-            remainingThreads.removeAll(initialThreads);
-
-            if (remainingThreads.size() <= finalThreadCount) {
+            if (remainingThreads.isEmpty()) {
                 break;
             }
 

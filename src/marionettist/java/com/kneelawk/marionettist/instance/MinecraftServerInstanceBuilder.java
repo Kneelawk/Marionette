@@ -92,9 +92,10 @@ public class MinecraftServerInstanceBuilder extends AbstractMinecraftInstanceBui
         commands.add("-Dfabric.dli.config=" + launchCfg);
         commands.add("-Dfabric.dli.env=server");
         commands.add("-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer");
+        commands.add("-D" + MarionetteConstants.ENVIRONMENT_PROPERTY + "=server");
         commands.add("-D" + MarionetteConstants.INSTANCE_NAME_PROPERTY + "=" + instanceName);
         commands.add("-D" + MarionetteConstants.RMI_PORT_PROPERTY + "=" + manager.getPort());
-        commands.add("com.kneelawk.marionette.server.MarionetteTestServer");
+        commands.add("net.fabricmc.devlaunchinjector.Main");
 
         if (!guiEnabled) {
             commands.add("--nogui");
