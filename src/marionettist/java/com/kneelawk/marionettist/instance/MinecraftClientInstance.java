@@ -33,7 +33,17 @@ public class MinecraftClientInstance extends AbstractMinecraftInstance {
         return future;
     }
 
-    public void pushClientTickCallback(ClientTickCallback callback) throws RemoteException {
-        rmiAccess.pushClientTickCallback(RMIUtils.export(callback));
+    public ListenableFuture<Void> pushClientTickCallback(ClientTickCallback callback) throws RemoteException {
+        SettableFuture<Void> future = SettableFuture.create();
+        rmiAccess.pushClientTickCallback(RMIUtils.export((thread, client) -> {
+            try {
+                callback.run(thread, client);
+                future.set(null);
+            } catch (Exception e) {
+                future.setException(e);
+                throw e;
+            }
+        }));
+        return future;
     }
 }

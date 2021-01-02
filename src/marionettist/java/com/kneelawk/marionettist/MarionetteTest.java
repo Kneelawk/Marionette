@@ -47,7 +47,7 @@ public class MarionetteTest {
         System.out.println("Shutting down the client...");
         minecraft.pushClientTickCallback((currentThread, client) -> {
             client.scheduleStop(currentThread);
-        });
+        }).get();
 
         System.out.println("Calling finish()");
         minecraft.finish();
