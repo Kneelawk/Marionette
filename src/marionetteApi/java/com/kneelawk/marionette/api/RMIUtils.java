@@ -21,4 +21,15 @@ public class RMIUtils {
     public static <T> T findOriginal(T export) {
         return (T) EXPORTS.get(export).get();
     }
+
+    public static <T> T requireOriginal(T export) {
+        T original = findOriginal(export);
+
+        if (original == null) {
+            throw new IllegalArgumentException(
+                    "Unable to find original RMI exported object. Maybe the object was exported in another process?");
+        }
+
+        return original;
+    }
 }

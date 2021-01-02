@@ -39,15 +39,13 @@ public class MarionetteTest {
         minecraft.startMinecraft();
 
         System.out.println("Waiting for minecraft to start...");
-        minecraft.getSplashScreenFuture().get();
+        minecraft.emplaceSplashScreenFuture().get();
 
         System.out.println("Calling hello()");
         minecraft.hello();
 
         System.out.println("Shutting down the client...");
-        minecraft.pushClientTickCallback((currentThread, client) -> {
-            client.scheduleStop(currentThread);
-        }).get();
+        minecraft.pushClientTickCallback((currentThread, client) -> client.scheduleStop(currentThread)).get();
 
         System.out.println("Calling finish()");
         minecraft.finish();
@@ -58,7 +56,7 @@ public class MarionetteTest {
     }
 
     @Test
-    void startServer() throws IOException, InterruptedException {
+    void startServer() throws IOException, InterruptedException, ExecutionException {
         MinecraftServerInstanceBuilder minecraftBuilder = new MinecraftServerInstanceBuilder("server");
 
         System.out.println("#############################");
@@ -69,8 +67,8 @@ public class MarionetteTest {
         System.out.println("Calling startMinecraft()");
         minecraft.startMinecraft();
 
-        System.out.println("Sleeping for 7 seconds");
-        Thread.sleep(7000);
+        System.out.println("Waiting for minecraft to start...");
+        minecraft.emplaceServerStartedFuture().get();
 
         System.out.println("Calling hello()");
         minecraft.hello();
@@ -90,9 +88,11 @@ public class MarionetteTest {
     }
 
     @Test
-    void startBoth() throws IOException, InterruptedException {
+    void startBoth() throws IOException, InterruptedException, ExecutionException {
         MinecraftServerInstanceBuilder serverBuilder = new MinecraftServerInstanceBuilder("server1");
         MinecraftClientInstanceBuilder clientBuilder = new MinecraftClientInstanceBuilder("client1");
+
+        serverBuilder.setGamemode("creative");
 
         System.out.println("#######################################");
         System.out.println("# Starting Minecrft Server and Client #");
@@ -113,6 +113,18 @@ public class MarionetteTest {
         PrintStream serverInput = new PrintStream(server.getProcess().getOutputStream());
         serverInput.println("/op client1");
         serverInput.flush();
+
+        System.out.println("Waiting for client to start up...");
+        client.emplaceSplashScreenFuture().get();
+
+        System.out.println("Waiting for server to start up...");
+        server.emplaceServerStartedFuture().get();
+
+        System.out.println("Connecting to server...");
+        client.pushClientTickCallback((thread, client1) -> {
+            client1.openScreen(thread,
+                    client.newConnectScreen(thread, client.newTitleScreen(thread), client1, "localhost", 25565));
+        }).get();
 
         server.finish();
         client.finish();
