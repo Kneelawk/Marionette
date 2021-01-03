@@ -32,15 +32,21 @@ public class MinecraftClientInstance extends AbstractMinecraftInstance {
         rmiAccess.hello();
     }
 
-    public ListenableFuture<Void> emplaceSplashScreenFuture() throws RemoteException {
+    public ListenableFuture<Void> createSplashScreenFuture() throws RemoteException {
         SettableFuture<Void> future = SettableFuture.create();
-        rmiAccess.setSplashScreenCallback(RMIUtils.export(() -> future.set(null)));
+        rmiAccess.addSplashScreenCallback(RMIUtils.export(() -> future.set(null)));
         return future;
     }
 
-    public ListenableFuture<Void> pushClientTickCallback(ClientTickCallback callback) throws RemoteException {
+    public ListenableFuture<Void> createGameJoinFuture() throws RemoteException {
         SettableFuture<Void> future = SettableFuture.create();
-        rmiAccess.pushClientTickCallback(RMIUtils.export((thread, client) -> {
+        rmiAccess.addGameJoinCallback(RMIUtils.export(() -> future.set(null)));
+        return future;
+    }
+
+    public ListenableFuture<Void> addClientTickCallback(ClientTickCallback callback) throws RemoteException {
+        SettableFuture<Void> future = SettableFuture.create();
+        rmiAccess.addClientTickCallback(RMIUtils.export((thread, client) -> {
             try {
                 callback.run(thread, client);
                 future.set(null);

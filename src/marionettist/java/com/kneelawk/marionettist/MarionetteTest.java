@@ -39,13 +39,13 @@ public class MarionetteTest {
         minecraft.startMinecraft();
 
         System.out.println("Waiting for minecraft to start...");
-        minecraft.emplaceSplashScreenFuture().get();
+        minecraft.createSplashScreenFuture().get();
 
         System.out.println("Calling hello()");
         minecraft.hello();
 
         System.out.println("Shutting down the client...");
-        minecraft.pushClientTickCallback((currentThread, client) -> client.scheduleStop(currentThread)).get();
+        minecraft.addClientTickCallback((currentThread, client) -> client.scheduleStop(currentThread)).get();
 
         System.out.println("Calling finish()");
         minecraft.finish();
@@ -107,6 +107,7 @@ public class MarionetteTest {
         MinecraftServerInstance server = serverBuilder.start(manager);
         MinecraftClientInstance client = clientBuilder.start(manager);
 
+        System.out.println("Calling startMinecraft()");
         server.startMinecraft();
         client.startMinecraft();
 
@@ -115,17 +116,25 @@ public class MarionetteTest {
         serverInput.flush();
 
         System.out.println("Waiting for client to start up...");
-        client.emplaceSplashScreenFuture().get();
+        client.createSplashScreenFuture().get();
 
         System.out.println("Waiting for server to start up...");
         server.emplaceServerStartedFuture().get();
 
         System.out.println("Connecting to server...");
-        client.pushClientTickCallback((thread, client1) -> {
-            client1.openScreen(thread,
-                    client.newConnectScreen(thread, client.newTitleScreen(thread), client1, "localhost", 25565));
-        }).get();
+        client.addClientTickCallback((thread, client1) -> client1.openScreen(thread,
+                client.newConnectScreen(thread, client.newTitleScreen(thread), client1, "localhost", 25565))).get();
 
+        System.out.println("Waiting for client to login...");
+        client.createGameJoinFuture().get();
+
+        System.out.println("Sending /stop command from client...");
+        client.addClientTickCallback((thread, client1) -> client1.getPlayer().sendChatMessage(thread, "/stop")).get();
+
+        System.out.println("Shutting down the client...");
+        client.addClientTickCallback((thread, client1) -> client1.scheduleStop(thread)).get();
+
+        System.out.println("Calling finish()");
         server.finish();
         client.finish();
 

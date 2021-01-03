@@ -28,12 +28,17 @@ public class MinecraftClientAccess extends AbstractMinecraftAccess implements RM
     }
 
     @Override
-    public void setSplashScreenCallback(RMIRunnable callback) throws RemoteException {
-        ClientGlobalSignals.setSplashScreenCallback(callback);
+    public void addSplashScreenCallback(RMIRunnable callback) throws RemoteException {
+        ClientGlobalSignals.addSplashScreenCallback(callback);
     }
 
     @Override
-    public void pushClientTickCallback(ClientTickCallback callback) throws RemoteException {
+    public void addGameJoinCallback(RMIRunnable callback) throws RemoteException {
+        ClientGlobalSignals.addGameJoinCallback(callback);
+    }
+
+    @Override
+    public void addClientTickCallback(ClientTickCallback callback) throws RemoteException {
         ClientGlobalQueues.pushClientTickCallback(callback);
     }
 

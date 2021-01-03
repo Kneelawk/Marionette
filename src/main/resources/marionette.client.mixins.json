@@ -4,6 +4,7 @@
   "package": "com.kneelawk.marionette.client.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "ClientPlayNetworkHandlerMixin",
     "SplashScreenMixin"
   ],
   "injectors": {

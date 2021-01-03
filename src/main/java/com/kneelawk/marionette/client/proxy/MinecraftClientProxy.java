@@ -3,6 +3,7 @@ package com.kneelawk.marionette.client.proxy;
 import com.kneelawk.marionette.ExecutionUtils;
 import com.kneelawk.marionette.api.CurrentThread;
 import com.kneelawk.marionette.api.RMIUtils;
+import com.kneelawk.marionette.api.proxy.RMIClientPlayerEntity;
 import com.kneelawk.marionette.api.proxy.RMIMinecraftClient;
 import com.kneelawk.marionette.api.proxy.RMIScreen;
 import net.minecraft.client.MinecraftClient;
@@ -29,5 +30,10 @@ public class MinecraftClientProxy implements RMIMinecraftClient {
     public void openScreen(CurrentThread thread, RMIScreen screen) throws RemoteException {
         ExecutionUtils
                 .executeIn(thread, () -> proxy.openScreen(((ScreenProxy) RMIUtils.requireOriginal(screen)).getProxy()));
+    }
+
+    @Override
+    public RMIClientPlayerEntity getPlayer() throws RemoteException {
+        return RMIUtils.export(new ClientPlayerEntityProxy(proxy.player));
     }
 }

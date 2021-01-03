@@ -14,9 +14,11 @@ public interface RMIMinecraftClientAccess extends Remote {
 
     void hello() throws RemoteException;
 
-    void setSplashScreenCallback(RMIRunnable callback) throws RemoteException;
+    void addSplashScreenCallback(RMIRunnable callback) throws RemoteException;
 
-    void pushClientTickCallback(ClientTickCallback callback) throws RemoteException;
+    void addGameJoinCallback(RMIRunnable callback) throws RemoteException;
+
+    void addClientTickCallback(ClientTickCallback callback) throws RemoteException;
 
     RMITitleScreen newTitleScreen(CurrentThread thread) throws RemoteException;
 

@@ -13,10 +13,6 @@ public class ClientGlobalQueues {
     }
 
     public static void pushClientTickCallback(ClientTickCallback callback) {
-        try {
-            CLIENT_TICK_CALLBACKS.put(callback);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        CLIENT_TICK_CALLBACKS.add(callback);
     }
 }
