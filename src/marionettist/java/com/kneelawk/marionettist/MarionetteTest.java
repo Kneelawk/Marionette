@@ -4,16 +4,31 @@ import com.kneelawk.marionettist.instance.MinecraftClientInstance;
 import com.kneelawk.marionettist.instance.MinecraftClientInstanceBuilder;
 import com.kneelawk.marionettist.instance.MinecraftServerInstance;
 import com.kneelawk.marionettist.instance.MinecraftServerInstanceBuilder;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.rmi.RemoteException;
+import java.util.concurrent.ExecutionException;
 
 public class MarionetteTest {
+    private static RMIConnectionManager manager;
+
+    @BeforeAll
+    static void startRMI() throws RemoteException {
+        manager = new RMIConnectionManager();
+    }
+
+    @AfterAll
+    static void stopRMI() {
+        manager.shutdown();
+    }
+
     @Test
-    void startClient() throws IOException, InterruptedException {
+    void startClient() throws IOException, InterruptedException, ExecutionException {
         MinecraftClientInstanceBuilder minecraftBuilder = new MinecraftClientInstanceBuilder("client");
-        RMIConnectionManager manager = new RMIConnectionManager();
 
         System.out.println("#############################");
         System.out.println("# Starting Minecraft Client #");
@@ -23,17 +38,17 @@ public class MarionetteTest {
         System.out.println("Calling startMinecraft()");
         minecraft.startMinecraft();
 
-        System.out.println("Sleeping for 7 seconds");
-        Thread.sleep(7000);
+        System.out.println("Waiting for minecraft to start...");
+        minecraft.createSplashScreenFuture().get();
 
         System.out.println("Calling hello()");
         minecraft.hello();
 
+        System.out.println("Shutting down the client...");
+        minecraft.addClientTickCallback((currentThread, client) -> client.scheduleStop(currentThread)).get();
+
         System.out.println("Calling finish()");
         minecraft.finish();
-
-        System.out.println("Shutting down the RMI server...");
-        manager.shutdown();
 
         System.out.println("#############################");
         System.out.println("# Minecraft Client finished #");
@@ -41,9 +56,8 @@ public class MarionetteTest {
     }
 
     @Test
-    void startServer() throws IOException, InterruptedException {
+    void startServer() throws IOException, InterruptedException, ExecutionException {
         MinecraftServerInstanceBuilder minecraftBuilder = new MinecraftServerInstanceBuilder("server");
-        RMIConnectionManager manager = new RMIConnectionManager();
 
         System.out.println("#############################");
         System.out.println("# Starting Minecraft Server #");
@@ -53,8 +67,8 @@ public class MarionetteTest {
         System.out.println("Calling startMinecraft()");
         minecraft.startMinecraft();
 
-        System.out.println("Sleeping for 7 seconds");
-        Thread.sleep(7000);
+        System.out.println("Waiting for minecraft to start...");
+        minecraft.emplaceServerStartedFuture().get();
 
         System.out.println("Calling hello()");
         minecraft.hello();
@@ -68,20 +82,17 @@ public class MarionetteTest {
         System.out.println("Calling finish()");
         minecraft.finish();
 
-        System.out.println("Shutting down the RMI server...");
-        manager.shutdown();
-
         System.out.println("#############################");
         System.out.println("# Minecraft Server finished #");
         System.out.println("#############################");
     }
 
     @Test
-    void startBoth() throws IOException, InterruptedException {
+    void startBoth() throws IOException, InterruptedException, ExecutionException {
         MinecraftServerInstanceBuilder serverBuilder = new MinecraftServerInstanceBuilder("server1");
         MinecraftClientInstanceBuilder clientBuilder = new MinecraftClientInstanceBuilder("client1");
 
-        RMIConnectionManager manager = new RMIConnectionManager();
+        serverBuilder.setGamemode("creative");
 
         System.out.println("#######################################");
         System.out.println("# Starting Minecrft Server and Client #");
@@ -96,6 +107,7 @@ public class MarionetteTest {
         MinecraftServerInstance server = serverBuilder.start(manager);
         MinecraftClientInstance client = clientBuilder.start(manager);
 
+        System.out.println("Calling startMinecraft()");
         server.startMinecraft();
         client.startMinecraft();
 
@@ -103,10 +115,28 @@ public class MarionetteTest {
         serverInput.println("/op client1");
         serverInput.flush();
 
+        System.out.println("Waiting for client to start up...");
+        client.createSplashScreenFuture().get();
+
+        System.out.println("Waiting for server to start up...");
+        server.emplaceServerStartedFuture().get();
+
+        System.out.println("Connecting to server...");
+        client.addClientTickCallback((thread, client1) -> client1.openScreen(thread,
+                client.newConnectScreen(thread, client.newTitleScreen(thread), client1, "localhost", 25565))).get();
+
+        System.out.println("Waiting for client to login...");
+        client.createGameJoinFuture().get();
+
+        System.out.println("Sending /stop command from client...");
+        client.addClientTickCallback((thread, client1) -> client1.getPlayer().sendChatMessage(thread, "/stop")).get();
+
+        System.out.println("Shutting down the client...");
+        client.addClientTickCallback((thread, client1) -> client1.scheduleStop(thread)).get();
+
+        System.out.println("Calling finish()");
         server.finish();
         client.finish();
-
-        manager.shutdown();
 
         System.out.println("#######################################");
         System.out.println("# Minecrft Server and Client finished #");

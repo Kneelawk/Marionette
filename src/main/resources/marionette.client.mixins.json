@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.kneelawk.marionette.client.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "ClientPlayNetworkHandlerMixin",
+    "SplashScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

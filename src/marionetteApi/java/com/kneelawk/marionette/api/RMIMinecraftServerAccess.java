@@ -7,4 +7,6 @@ public interface RMIMinecraftServerAccess extends Remote {
     void start() throws RemoteException;
 
     void hello() throws RemoteException;
+
+    void setServerStartedCallback(RMIRunnable callback) throws RemoteException;
 }

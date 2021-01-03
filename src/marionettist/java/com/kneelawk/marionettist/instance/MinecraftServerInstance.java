@@ -1,7 +1,10 @@
 package com.kneelawk.marionettist.instance;
 
-import com.kneelawk.marionettist.LogWatcherThread;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.kneelawk.marionette.api.RMIMinecraftServerAccess;
+import com.kneelawk.marionette.api.RMIUtils;
+import com.kneelawk.marionettist.LogWatcherThread;
 
 import java.rmi.RemoteException;
 
@@ -21,5 +24,11 @@ public class MinecraftServerInstance extends AbstractMinecraftInstance {
 
     public void hello() throws RemoteException {
         rmiAccess.hello();
+    }
+
+    public ListenableFuture<Void> emplaceServerStartedFuture() throws RemoteException {
+        SettableFuture<Void> future = SettableFuture.create();
+        rmiAccess.setServerStartedCallback(RMIUtils.export(() -> future.set(null)));
+        return future;
     }
 }
